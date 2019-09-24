@@ -18,7 +18,7 @@
 % OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 % THE SOFTWARE.
 %
-\ProvidesClass{tudelftposter}[2013/09/09, v. 1.0]
+\ProvidesClass{tudelftposter}[2019/09/24, v. 1.1]
 \NeedsTeXFormat{LaTeX2e}[1995/06/01]
 \RequirePackage{etoolbox}
 
@@ -32,7 +32,6 @@
 \DeclareStringOption[]{ncolumns}
 \DeclareStringOption[]{footerheight}
 \DeclareBoolOption{landscape}
-\DeclareBoolOption{experimentalheadergradient}
 
 \ExecuteOptions{final}
 \ProcessKeyvalOptions*
@@ -163,8 +162,15 @@
 
 % fonts and sections [[[
 
+\RequirePackage{fontspec}
+
+% TODO these fonts should be used according to corporate design, but they don't look nice...
+% \setmainfont{Georgia} % On Linux, apt install ttf-mscorefonts-installer
+% \setsansfont{Arial}
+\newfontfamily{\tudfontultralight}{[TUDelft-UltraLight.ttf]}
+
 \renewcommand{\familydefault}{\sfdefault}
-\newcommand{\tudstylesection}{\normalfont\sffamily\large\bfseries\color{tudcyan}}
+\newcommand{\tudstylesection}{\normalfont\sffamily\large\color{tudcyan}}
 
 \setcounter{secnumdepth}{0}
 \renewcommand\section{%
@@ -229,7 +235,7 @@
 % ]]]
 % header [[[
 
-\newcommand{\tudstyleheadtitle}{\normalfont\sffamily\color{white}\huge\bfseries}
+\newcommand{\tudstyleheadtitle}{\normalfont\tudfontultralight\color{tudcyan}\Huge\bfseries}
 \newcommand{\tudstyleheadauthors}{\normalfont\sffamily\Large\frenchspacing}
 \newcommand{\tudstyleheadauthornotes}{\normalfont\sffamily\fontsize{32}{45}\selectfont}
 
@@ -240,7 +246,7 @@
   \newpage%
   \null%
   \setbox\@tempboxa\vbox{%
-    \vskip 2em%
+    \vskip 3em%
     \begin{center}%
     \let \footnote \thanks
       {\tudstyleheadtitle \@title \par}%
@@ -265,28 +271,15 @@
     \end{center}%
     \par%
     \vskip\columnsep}%
-  \tud@headergradient{\ht\@tempboxa+\dp\@tempboxa}%
+  \global\deflength\tud@titleheaderheight{\ht\@tempboxa+\dp\@tempboxa}%
   \unvbox\@tempboxa%
 }
 
 \newlength\tud@titleheaderheight
-\def\tud@headergradient#1{%
-  \global\deflength\tud@titleheaderheight{#1}%
-  \begin{tikzpicture}[remember picture,overlay]
-    \node at (current page.north west)
-      {\begin{tikzpicture}[remember picture,overlay]
-        \iftud@opt@experimentalheadergradient
-          \fill[tudcyan,path fading=south] (-\safetymargin,\safetymargin) rectangle (\paperwidth+\safetymargin,-\tud@titleheaderheight);
-        \else
-          \draw[draw=none,top color=tudcyan,bottom color=tud@backgroundcolor] (-\safetymargin,\safetymargin) rectangle (\paperwidth+\safetymargin,-\tud@titleheaderheight);
-        \fi
-       \end{tikzpicture}
-      };
-  \end{tikzpicture}}
 
 \newcommand{\tud@set@tikz@body}{%
   \newlength{\tud@body@t}\deflength{\tud@body@t}{\paperheight-\tud@titleheaderheight-\columnsep}%
-  \newlength{\tud@body@b}\deflength{\tud@body@b}{\footerheight+\columnsep}%
+  \newlength{\tud@body@b}\deflength{\tud@body@b}{\footerheightwithmargin}%
   \newlength{\tud@body@l}\deflength{\tud@body@l}{\tud@hmargin}%
   \newlength{\tud@body@r}\deflength{\tud@body@r}{\paperwidth-\tud@hmargin}%
   \csdef{pgf@sh@ns@body}{rectangle}%
@@ -310,40 +303,33 @@
 
 \newlength\footerheight
 \ifx\tud@opt@footerheight\@empty%
-  \deflength\footerheight{.1\paperheight}%
-\else%
+  \deflength\footerheight{.05\paperheight}%
+\else
   \deflength\footerheight{\tud@opt@footerheight}%
 \fi
+\newlength\footercolourbandheight
+\deflength\footercolourbandheight{.09367\paperheight}
 \newlength\footerheightwithmargin
-\deflength\footerheightwithmargin{\footerheight+\columnsep}
+\deflength\footerheightwithmargin{\footercolourbandheight+\footerheight+\columnsep}
 \geometry{vmargin={0cm,\footerheightwithmargin}}
 
 \newlength\footerblacklinewidth
 \deflength\footerblacklinewidth{1pt}
-\newlength\footerwhiteliney
-\deflength\footerwhiteliney{.115\footerheight}
-\newlength\footerwhitelinewidth
-\deflength\footerwhitelinewidth{.01\footerheight}
-\newlength\footerblueyi
-\deflength\footerblueyi{\footerwhiteliney-.5\footerwhitelinewidth}
-\newlength\footerblueyii
-\deflength\footerblueyii{\footerwhiteliney+.5\footerwhitelinewidth}
-\newlength\footerblueyiii
-\deflength\footerblueyiii{.4\footerheight}
-\newlength\footerimagemargin
-\deflength\footerimagemargin{.085\footerheight}
-\newlength\footerimageheight
-\deflength\footerimageheight{\footerheight-\footerblueyiii-2\footerimagemargin}
-
-\newlength\footerimagey
-\deflength\footerimagey{\footerblueyiii+\footerimagemargin}
+\newlength\footermargin
+\deflength\footermargin{.085\footerheight}
 
 \newcommand{\tudfooterfontsize}{\fontsize{0.1\footerheight}{0.125\footerheight}\selectfont}
-\newcommand{\tudstylefooter}{\normalfont\sffamily\color{white}\tudfooterfontsize\bfseries}
+\newcommand{\tudstylefooter}{\normalfont\sffamily\color{black}\tudfooterfontsize\bfseries}
 \newlength\footertextheight
 \settoheight\footertextheight{\tudstylefooter X}
 \newlength\footerimagetexty
-\deflength\footerimagetexty{.5\footerblueyii+.5\footerblueyiii-.5\footertextheight}
+\deflength\footerimagetexty{\footercolourbandheight+\footermargin}
+
+\newlength\footerimageheight
+\deflength\footerimageheight{\footerheight-3\footermargin-\footertextheight}
+
+\newlength\footerimagey
+\deflength\footerimagey{\footercolourbandheight+2\footermargin+\footertextheight}
 
 \tud@string@new{footer}
 
@@ -353,11 +339,13 @@
   \def\@oddfoot{%
     \reset@font%
     \begin{tikzpicture}[remember picture,overlay]
+      % Footer colour band (NL: bies)
+      \node[inner sep=0pt] at (current page.center){
+        \includegraphics[width=\paperwidth,height=\paperheight]{TUDelft-bies-A0-eps-converted-to.pdf}};
+      % Footer black line
       \node at (current page.south west)
         {\begin{tikzpicture}[remember picture, overlay]
-          \fill[tudcyan] (-\safetymargin,-\safetymargin) rectangle (\paperwidth+\safetymargin,\footerblueyi);
-          \fill[tudcyan] (-\safetymargin,\footerblueyii) rectangle (\paperwidth+\safetymargin,\footerblueyiii);
-          \fill[black] (-\safetymargin,\footerheight) rectangle (\paperwidth+\safetymargin,\footerheight+\footerblacklinewidth);
+          \fill[black] (-\safetymargin,\footercolourbandheight+\footerheight) rectangle (\paperwidth+\safetymargin,\footercolourbandheight+\footerheight+\footerblacklinewidth);
           \tud@string@use{footer}
          \end{tikzpicture}
         };
